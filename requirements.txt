@@ -1,6 +1,7 @@
 fastapi
 uvicorn
 numpy
-pyyaml
 pydantic
 openai
+pyyaml
+openenv>=0.2.0
