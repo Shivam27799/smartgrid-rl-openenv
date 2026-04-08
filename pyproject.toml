@@ -13,14 +13,14 @@ dependencies = [
     "fastapi",
     "uvicorn",
     "numpy",
-    "pydantic>=2.0.0",
+    "pydantic",
     "openai",
     "pyyaml",
-    "openenv-core>=0.2.0"
+    "openenv"
 ]
 
 [project.scripts]
 server = "app:app"
 
 [tool.setuptools]
-packages = ["."]
+py-modules = ["app", "environment", "tasks", "inference"]
