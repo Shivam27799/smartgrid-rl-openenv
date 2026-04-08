@@ -5,23 +5,23 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "smartgrid-rl-v1"
 version = "1.0.0"
-description = "A professional OpenEnv compliant microgrid energy balancing environment."
+description = "Professional OpenEnv energy balancing environment."
 readme = "README.md"
 requires-python = ">=3.9"
-authors = [
-    { name = "shivamverma27799" }
-]
+authors = [{ name = "shivamverma27799" }]
 dependencies = [
     "fastapi",
     "uvicorn",
     "numpy",
     "pydantic",
     "openai",
-    "pyyaml"
+    "pyyaml",
+    "openenv>=0.2.0" # REQUIRED DEPENDENCY
 ]
 
-[project.optional-dependencies]
-dev = ["pytest", "black"]
+[project.scripts]
+# This defines the entry point the validator is looking for
+server = "app:app" 
 
 [tool.setuptools.package-data]
 "*" = ["*.yaml", "*.toml"]
