@@ -1,0 +1,8 @@
+# This is a placeholder uv.lock file
+version = 1
+revision = 1
+
+[[package]]
+name = "smartgrid-rl-v1"
+version = "1.0.0"
+source = { virtual = "." }
