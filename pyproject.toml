@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "smartgrid-rl-v1"
+version = "1.0.0"
+description = "A professional OpenEnv compliant microgrid energy balancing environment."
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [
+    { name = "shivamverma27799" }
+]
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "numpy",
+    "pydantic",
+    "openai",
+    "pyyaml"
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "black"]
+
+[tool.setuptools.package-data]
+"*" = ["*.yaml", "*.toml"]
