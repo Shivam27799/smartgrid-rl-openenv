@@ -20,7 +20,10 @@ dependencies = [
 ]
 
 [project.scripts]
-server = "app:app"
+# This points exactly to the new function we just made
+server = "server.app:main"
 
 [tool.setuptools]
-py-modules = ["app", "environment", "tasks", "inference"]
+# This tells the installer to include the new server folder
+packages = ["server"]
+py-modules = ["environment", "tasks", "inference"]
