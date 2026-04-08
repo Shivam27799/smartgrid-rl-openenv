@@ -1,41 +1,67 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
+from environment import SmartGridEnv, GridAction, GridObservation
 from tasks import run_grader
 
-app = FastAPI()
+app = FastAPI(title="SmartGrid-v1 OpenEnv")
+
+# Global environment instance to persist state between API calls
+env = SmartGridEnv()
+
+# --- MANDATORY OPENENV API ENDPOINTS ---
+
+@app.get("/state", response_model=GridObservation)
+def get_state():
+    """Requirement: state() -> returns current state."""
+    return env.state()
+
+@app.post("/reset", response_model=GridObservation)
+def reset_env():
+    """Requirement: reset() -> returns initial observation."""
+    return env.reset()
+
+@app.post("/step")
+def step_env(action: GridAction):
+    """Requirement: step(action) -> returns obs, reward, done, info."""
+    obs, reward, done, info = env.step(action)
+    return {
+        "observation": obs,
+        "reward": reward,
+        "done": done,
+        "info": info
+    }
+
+# --- EVALUATION & DASHBOARD ---
+
+@app.get("/evaluate")
+def evaluate():
+    """Returns programmatic scores for all 3 tasks."""
+    return {
+        "task_easy": run_grader("easy"),
+        "task_medium": run_grader("medium"),
+        "task_hard": run_grader("hard")
+    }
 
 @app.get("/", response_class=HTMLResponse)
-def home():
+def dashboard():
+    """The Visual Monitor for Human Reviewers."""
     e, m, h = run_grader("easy"), run_grader("medium"), run_grader("hard")
-    
     return f"""
     <html>
         <head><style>
-            body {{ font-family: 'Inter', sans-serif; background: #0f172a; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }}
-            .card {{ background: #1e293b; padding: 40px; border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); width: 350px; border: 1px solid #334155; }}
-            .bar-bg {{ background: #334155; height: 12px; border-radius: 6px; margin: 10px 0 20px; overflow: hidden; }}
-            .bar-fill {{ height: 100%; transition: width 1s ease-in-out; }}
-            h1 {{ font-size: 1.2rem; letter-spacing: 2px; color: #94a3b8; margin-bottom: 30px; }}
-            .label {{ display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: 600; }}
+            body {{ font-family: sans-serif; background: #0f172a; color: white; text-align: center; padding: 50px; }}
+            .card {{ background: #1e293b; padding: 30px; border-radius: 15px; display: inline-block; }}
+            .bar-bg {{ background: #334155; height: 12px; width: 300px; border-radius: 6px; margin: 10px auto; overflow: hidden; }}
+            .bar-fill {{ height: 100%; transition: width 1s; }}
         </style></head>
         <body>
             <div class="card">
-                <h1>⚡ GRID MONITOR v1.0</h1>
-                <div class="label"><span>EASY TASK</span><span>{e}</span></div>
-                <div class="bar-bg"><div class="bar-fill" style="width: {e*100}%; background: #22c55e;"></div></div>
-                
-                <div class="label"><span>MEDIUM TASK</span><span>{m}</span></div>
-                <div class="bar-bg"><div class="bar-fill" style="width: {m*100}%; background: #3b82f6;"></div></div>
-                
-                <div class="label"><span>HARD TASK</span><span>{h}</span></div>
-                <div class="bar-bg"><div class="bar-fill" style="width: {h*100}%; background: #ef4444;"></div></div>
-                
-                <div style="font-size: 0.7rem; color: #64748b; margin-top: 20px;">OpenEnv Spec Compliance: <b>Verified</b></div>
+                <h1>⚡ SmartGrid OpenEnv Monitor</h1>
+                <p>Easy: {e}</p><div class="bar-bg"><div class="bar-fill" style="width:{e*100}%; background:#22c55e;"></div></div>
+                <p>Medium: {m}</p><div class="bar-bg"><div class="bar-fill" style="width:{m*100}%; background:#3b82f6;"></div></div>
+                <p>Hard: {h}</p><div class="bar-bg"><div class="bar-fill" style="width:{h*100}%; background:#ef4444;"></div></div>
+                <p style="margin-top:20px; font-size: 0.8rem; color: #64748b;">API Status: <b>Ready</b> | Spec: <b>OpenEnv 2.0</b></p>
             </div>
         </body>
     </html>
     """
-
-@app.get("/evaluate")
-def evaluate():
-    return {"task_easy": run_grader("easy"), "task_medium": run_grader("medium"), "task_hard": run_grader("hard")}
