@@ -3,7 +3,13 @@ version: "1.0.0"
 type: "environment"
 description: "Real-world microgrid load balancing task simulating energy market optimization."
 maintainer: "shivamverma27799"
-task_ids: ["easy", "medium", "hard"]
+tasks:
+  - id: "easy"
+    grader: "tasks.py:grader_easy"
+  - id: "medium"
+    grader: "tasks.py:grader_medium"
+  - id: "hard"
+    grader: "tasks.py:grader_hard"
 tags: ["openenv", "energy", "resource-allocation"]
 observation_space:
   type: "dict"

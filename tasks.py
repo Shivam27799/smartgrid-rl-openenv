@@ -36,3 +36,12 @@ def run_grader(difficulty: str):
     
     # Return the mean of all episodes
     return round(float(np.mean(episode_scores)), 2)
+
+def grader_easy():
+    return run_grader("easy")
+
+def grader_medium():
+    return run_grader("medium")
+
+def grader_hard():
+    return run_grader("hard")
