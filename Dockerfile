@@ -21,6 +21,3 @@ RUN pip install --no-cache-dir -e .
 EXPOSE 7860
 
 CMD ["uvicorn", "server.app:app", "--host", "0.0.0.0", "--port", "7860"]
-
-# Start the FastAPI server in the background AND run the inference script
-CMD python -m server.app & sleep 5 && python inference.py
