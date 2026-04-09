@@ -4,18 +4,12 @@ from environment import SmartGridEnv, GridAction
 
 # MANDATORY VARIABLES FROM CHECKLIST
 # The validator injects these; we MUST use them.
-API_BASE_URL = os.getenv("API_BASE_URL", "https://api.openai.com/v1")
-MODEL_NAME = os.getenv("MODEL_NAME", "gpt-3.5-turbo")
-HF_TOKEN = os.getenv("HF_TOKEN")
-
-# For the OpenAI Client compatibility, we map HF_TOKEN to API_KEY
-API_KEY = HF_TOKEN if HF_TOKEN else "dummy"
-
-# Initialize client using the specific checklist variables
+# Use os.environ strictly as requested by the hackathon validator
 client = OpenAI(
-    api_key=API_KEY,
-    base_url=API_BASE_URL
+    base_url=os.environ["API_BASE_URL"],
+    api_key=os.environ["API_KEY"]
 )
+MODEL_NAME = os.environ.get("MODEL_NAME", "gpt-3.5-turbo")
 
 def run_inference():
     task_name = "hard"
@@ -39,7 +33,8 @@ def run_inference():
                 max_tokens=10
             )
             action_val = float(response.choices[0].message.content.strip())
-        except:
+        except Exception as e:
+            print(f"API Error: {e}")
             action_val = (obs.load - obs.supply) * 0.7 
         
         # Step environment

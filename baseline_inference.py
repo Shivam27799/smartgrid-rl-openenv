@@ -3,8 +3,11 @@ import numpy as np
 from openai import OpenAI
 from environment import SmartGridEnv, GridAction
 
-API_KEY = os.getenv("OPENAI_API_KEY", "dummy_key")
-client = OpenAI(api_key=API_KEY)
+API_KEY = os.environ["API_KEY"]
+client = OpenAI(
+    base_url=os.environ["API_BASE_URL"],
+    api_key=API_KEY
+)
 
 def run_reproducible_baseline():
     print(f"Executing OpenEnv Baseline... (Key: {API_KEY[:4]}***)")
