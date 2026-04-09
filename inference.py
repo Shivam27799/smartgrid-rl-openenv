@@ -14,7 +14,7 @@ API_KEY = HF_TOKEN if HF_TOKEN else "dummy"
 # Initialize client using the specific checklist variables
 client = OpenAI(
     api_key=API_KEY,
-    base_url=API_BASE
+    base_url=API_BASE_URL
 )
 
 def run_inference():
