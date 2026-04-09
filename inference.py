@@ -4,7 +4,7 @@ from environment import SmartGridEnv, GridAction
 
 # MANDATORY VARIABLES FROM CHECKLIST
 # The validator injects these; we MUST use them.
-API_KEY = os.getenv("HF_TOKEN", os.getenv("API_KEY", "dummy_key"))
+API_KEY = os.getenv("API_KEY", os.getenv("HF_TOKEN", "dummy"))
 API_BASE = os.getenv("API_BASE_URL", "https://api.openai.com/v1")
 MODEL_NAME = os.getenv("MODEL_NAME", "gpt-3.5-turbo") 
 
