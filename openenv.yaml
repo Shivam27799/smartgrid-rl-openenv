@@ -2,31 +2,16 @@ version: "1.0.0"
 metadata:
   name: "SmartGrid-v1"
   type: "environment"
-  description: "Real-world microgrid load balancing task simulating energy market optimization."
-  maintainer: "shivamverma27799"
-  tags: ["openenv", "energy", "resource-allocation"]
 
 tasks:
   - id: "easy"
     name: "Easy Grid Management"
-    grader: "tasks:grader_easy"
+    grader: "tasks.py:grader_easy"
   - id: "medium"
     name: "Medium Grid Management"
-    grader: "tasks:grader_medium"
+    grader: "tasks.py:grader_medium"
   - id: "hard"
     name: "Hard Grid Management"
-    grader: "tasks:grader_hard"
-
-spaces:
-  observation_space:
-    type: "dict"
-    properties:
-      load: {type: "number", min: 0, max: 1}
-      supply: {type: "number", min: 0, max: 1}
-      price: {type: "number", min: 0, max: 1}
-  action_space:
-    type: "dict"
-    properties:
-      energy_trade: {type: "number", min: -1, max: 1}
+    grader: "tasks.py:grader_hard"
 
 entrypoint: "server.app:main"
