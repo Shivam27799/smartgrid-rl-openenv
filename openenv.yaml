@@ -1,17 +1,18 @@
+name: "SmartGrid-v1"
 version: "1.0.0"
-metadata:
-  name: "SmartGrid-v1"
-  type: "environment"
+type: "environment"
+description: "Real-world microgrid load balancing task"
+maintainer: "shivamverma27799"
 
 tasks:
   - id: "easy"
-    name: "Easy Grid Management"
-    grader: "tasks.py:grader_easy"
+    name: "Easy Task"
+    grader: "tasks:grader_easy"
   - id: "medium"
-    name: "Medium Grid Management"
-    grader: "tasks.py:grader_medium"
+    name: "Medium Task"
+    grader: "tasks:grader_medium"
   - id: "hard"
-    name: "Hard Grid Management"
-    grader: "tasks.py:grader_hard"
+    name: "Hard Task"
+    grader: "tasks:grader_hard"
 
 entrypoint: "server.app:main"
