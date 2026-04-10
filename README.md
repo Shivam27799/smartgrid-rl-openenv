@@ -1,3 +1,12 @@
+---
+title: SmartGrid OpenEnv
+emoji: ⚡
+colorFrom: blue
+colorTo: green
+sdk: docker
+app_port: 7860
+---
+
 # ⚡ SmartGrid: AI Power Grid Manager
 
 This project was built for the **Meta PyTorch Hackathon x Scaler School of Technology**. 
