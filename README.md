@@ -1,62 +1,43 @@
----
-title: SmartGrid-RL-v1
-emoji: ⚡
-colorFrom: green
-colorTo: blue
-sdk: docker
-app_port: 7860
-pinned: false
-tags:
-  - openenv
-  - rl-environment
-  - resource-allocation
----
+# ⚡ SmartGrid: AI Power Grid Manager
 
-# ⚡ SmartGrid-v1 (OpenEnv Spec 2.0)
+This project was built for the **Meta PyTorch Hackathon x Scaler School of Technology**. 
 
-SmartGrid-v1 is a production-oriented Reinforcement Learning environment for microgrid management. It follows the **full OpenEnv specification**, utilizing Pydantic for type-safe state/action transitions and WebSocket-ready logic.
+It is a simulation of a real-world power grid. The goal of the project is to see if an Artificial Intelligence (AI) can successfully manage a city's electricity. The AI has to look at how much power the city needs, how much power is available, and make smart trading decisions to keep the grid stable without wasting money.
 
-## 📖 Environment Description
-The agent acts as a Grid Controller. Its objective is to balance volatile energy supply (Solar/Wind) against consumer load while avoiding costly energy purchases during market price spikes.
+## 📖 How It Works
 
-### Why this is a "Real-World" Task:
-Energy load balancing is a critical utility task performed by ISOs (Independent System Operators). Human operators must manage storage and grid-buy actions to maintain 50/60Hz stability without bankrupting the utility provider.
+Think of this project like an automated video game where the AI is the player. 
 
----
+1. **The Game Board:** We created a virtual environment that mimics a power grid. It has rules, scores, and three difficulty levels (Easy, Medium, and Hard).
+2. **The Player:** We wrote a script that connects to an AI (like ChatGPT). The AI looks at the current power levels and decides what to do next.
+3. **The Loop:** The AI makes a move, the game calculates the score, and then the AI makes its next move. This repeats until the test is over.
 
-## 🛠 Technical Specification
+## 📂 What The Files Do
 
-### Action Space (`GridAction`)
-Typed Pydantic model:
-- `energy_trade`: float [-1.0, 1.0]. (Positive = Buy, Negative = Sell).
+Here is a simple breakdown of the main files in this project and what their jobs are:
 
-### Observation Space (`GridObservation`)
-Typed Pydantic model returned via `step()` and `state()`:
-- `load`: Current demand (0.0-1.0)
-- `supply`: Renewable generation (0.0-1.0)
-- `price`: Market price (0.0-1.0)
+* **`openenv.yaml` (The ID Card):** This file tells the Hackathon's grading system exactly what our project is, what difficulty levels are available, and how to start the test.
+* **`server/app.py` (The Switchboard):** This is the communication hub. It listens for commands like "Start a new game" or "Make this move" and passes those messages to the game board.
+* **`environment.py` (The Game Engine):** This file contains the actual math and rules. It calculates supply, demand, and penalties if the AI makes a bad choice.
+* **`tasks.py` (The Referee):** This makes sure the game is set to the correct difficulty level when the grader asks for it.
+* **`inference.py` (The AI Player):** This is the brain of the operation. It wakes up, connects to the Hackathon's AI system, asks it for the best move, and sends that move to the Switchboard.
+* **`Dockerfile` (The Setup Instructions):** This is a set of instructions that automatically installs all the right software so this project can run on any computer in the world without crashing.
 
-### Reward Function (Partial Progress)
-Calculated at every step:
-$$Reward = e^{-5|\beta|} - (\omega \cdot P \cdot \max(0, A) \cdot 10)$$
-*Where $\beta$ is balance, $P$ is price, $A$ is action, and $\omega$ is the difficulty-based penalty weight.*
+## 🚀 The Grading Process
 
----
+When the Hackathon's automated system tests this project, here is exactly what happens:
 
-## 🚦 Tasks & Baselines
+1. The system reads the `openenv.yaml` file to learn how to start the program.
+2. It turns on our Switchboard (`app.py`) and wakes up our AI Player (`inference.py`).
+3. It asks the AI Player to complete a specific task (like the "Hard" difficulty).
+4. The AI Player makes up to 50 moves, printing out its score after every single step.
+5. When finished, the AI prints a final "Game Over" message with its average score, and the grader records the results.
 
-| Task ID | Difficulty | Noise Level | Price Penalty | Baseline Score |
-| :--- | :--- | :--- | :--- | :--- |
-| `easy` | Low | 0.05 | 0.1 | **~0.95** |
-| `medium` | Moderate | 0.20 | 5.0 | **~0.65** |
-| `hard` | High | 0.45 | 25.0 | **~0.30** |
+## 🛠 Want to run it yourself?
 
----
+If you download this code to your own computer, you can run it by opening two terminal windows:
 
-## 🚀 Setup and Usage
-
-### Containerized Execution
-This environment is fully containerized. To run locally:
+**Window 1 (Turn on the game):**
 ```bash
-docker build -t smartgrid-env .
-docker run -p 7860:7860 smartgrid-env
+pip install -r requirements.txt
+uvicorn server.app:app --host 127.0.0.1 --port 7860
