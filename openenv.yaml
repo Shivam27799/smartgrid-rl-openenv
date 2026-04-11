@@ -4,23 +4,26 @@ type: "environment"
 description: "Real-world microgrid load balancing task"
 maintainer: "shivamverma27799"
 
+# Add this section for grader discovery
+grader_module: "tasks"
+
 tasks:
   - id: "easy"
     name: "Easy Task"
     description: "Easy difficulty - basic load balancing"
-    grader: "tasks:grader_easy"
+    grader: "grader_easy"
     enabled: true
     
   - id: "medium"
     name: "Medium Task"
     description: "Medium difficulty - moderate load balancing with constraints"
-    grader: "tasks:grader_medium"
+    grader: "grader_medium"
     enabled: true
     
   - id: "hard"
     name: "Hard Task"
     description: "Hard difficulty - complex load balancing scenarios"
-    grader: "tasks:grader_hard"
+    grader: "grader_hard"
     enabled: true
 
 entrypoint: "server.app:main"
