@@ -7,12 +7,20 @@ maintainer: "shivamverma27799"
 tasks:
   - id: "easy"
     name: "Easy Task"
+    description: "Easy difficulty - basic load balancing"
     grader: "tasks:grader_easy"
+    enabled: true
+    
   - id: "medium"
     name: "Medium Task"
+    description: "Medium difficulty - moderate load balancing with constraints"
     grader: "tasks:grader_medium"
+    enabled: true
+    
   - id: "hard"
     name: "Hard Task"
+    description: "Hard difficulty - complex load balancing scenarios"
     grader: "tasks:grader_hard"
+    enabled: true
 
 entrypoint: "server.app:main"
