@@ -8,51 +8,39 @@ app_port: 7860
 tags:
   - openenv
   - rl-environment
+  - llm-agent
   - resource-allocation
-  - reinforcement-learning
 ---
 
-# ⚡ SmartGrid-v1 (OpenEnv Spec 2.0) - Phase 2 Submission
+# ⚡ SmartGrid-v1 (OpenEnv Spec) - Phase 2 Submission
 
-SmartGrid-v1 is a production-oriented Reinforcement Learning environment for microgrid management. It follows the **full OpenEnv specification**, utilizing Pydantic for type-safe state/action transitions.
+SmartGrid-v1 is a production-oriented Reinforcement Learning and LLM-Agent environment for microgrid management. It follows the **full OpenEnv specification**, utilizing Pydantic for type-safe state/action transitions and an asynchronous FastAPI backend.
 
 ## 📖 Environment Description
 
-The agent acts as a Grid Controller. Its objective is to balance volatile energy supply (Solar/Wind) against consumer load while avoiding costly energy purchases during market price spikes.
+The AI agent acts as a Grid Controller. Its objective is to balance volatile energy supply (Solar/Wind) against consumer load while avoiding costly energy purchases during market price spikes.
 
 ### Why this is a "Real-World" Task:
-
-Energy load balancing is a critical utility task performed by ISOs (Independent System Operators). Agents must manage storage and grid-buy actions to maintain stability without excessive costs.
+Energy load balancing is a critical utility task performed by ISOs (Independent System Operators). Agents must evaluate real-time telemetry (Load, Supply, Price) and make precise trade calculations to maintain grid stability without triggering massive financial penalties.
 
 ---
 
 ## 🛠 Technical Specification
 
 ### Action Space (`GridAction`)
-
 Typed Pydantic model:
-
 - `energy_trade`: float [-1.0, 1.0] (Positive = Buy, Negative = Sell)
 
 ### Observation Space (`GridObservation`)
-
 Typed Pydantic model returned via `step()` and `state()`:
-
 - `load`: Current demand (0.0-1.0)
 - `supply`: Renewable generation (0.0-1.0)
 - `price`: Market price (0.0-1.0)
 
 ### Reward Function
-
 Calculated at every step:
 $$Reward = e^{-5|\beta|} - (\omega \cdot P \cdot \max(0, A) \cdot 10)$$
-
-Where:
-
-- $\beta$ = balance (load - supply)
-- $P$ = market price
-- $A$ = action magnitude
-- $\omega$ = difficulty-based penalty weight
+Where $\beta$ = balance (load - supply), $P$ = market price, $A$ = action magnitude, and $\omega$ = difficulty-based penalty weight.
 
 ---
 
@@ -66,148 +54,32 @@ Where:
 
 ---
 
-## 🚀 Quick Start
+## 🤖 LLM Agent Architecture (Proxy Integrated)
 
-### Prerequisites
+Unlike static rule-based scripts, this submission features a dynamic LLM Agent designed to pass Hackathon Proxy Validation.
 
-```bash
-pip install -r requirements.txt
-```
-
-### Run All Tasks
-
-```bash
-python inference.py
-```
-
-### Expected Output Format
-
-```
-========== RUNNING TASK: EASY ==========
-[START] task=easy
-[STEP] step=1 reward=0.35
-[STEP] step=2 reward=0.42
-...
-[STEP] step=24 reward=0.38
-[END] task=easy score=0.4521 steps=24
-
-========== RUNNING TASK: MEDIUM ==========
-[START] task=medium
-[STEP] step=1 reward=0.45
-...
-[END] task=medium score=0.5234 steps=24
-
-========== RUNNING TASK: HARD ==========
-[START] task=hard
-[STEP] step=1 reward=0.30
-...
-[END] task=hard score=0.6145 steps=24
-
-[SUMMARY] Completed 3/3 tasks
-```
-
----
-
-## 🤖 Agent Strategy
-
-**Smart Rule-Based Agent** (No external API calls)
-
-### Easy Task
-
-- Simple load-supply balancing
-- Minimal price consideration
-- Formula: `action = clamp(load_diff * 0.5)`
-
-### Medium Task
-
-- Balance + price awareness
-- Moderate aggressiveness
-- Formula: `action = clamp(load_diff * 0.6 + price_impact * 0.4)`
-
-### Hard Task
-
-- Advanced multi-factor strategy
-- Supply margin detection
-- Adaptive aggressiveness based on grid state
+1. **Proxy Injection:** `inference.py` dynamically accepts `API_BASE_URL` and `API_KEY` from the Hackathon validator environment.
+2. **Telemetry Prompting:** At every step, the agent parses the FastAPI `GridObservation` and feeds the exact numerical state to the LLM (e.g., `gpt-3.5-turbo`).
+3. **Graceful Fallback:** Implements strict `try/except` typing validation to prevent container crashes if the LLM hallucinates non-float responses.
 
 ---
 
 ## 📁 Project Structure
 
-```
-smartgrid-rl-openenv-main/
-├── inference.py          # Phase 2 submission (3 tasks)
-├── environment.py        # SmartGrid environment
-├── setup.py             # Package configuration
-├── requirements.txt     # Dependencies (numpy, pydantic, gymnasium)
-├── README.md            # This file
-└── Dockerfile           # Container configuration (optional)
-```
+```text
+smartgrid-rl-openenv/
+├── server/
+│   └── app.py           # FastAPI server & OpenEnv API endpoints
+├── inference.py         # LLM agent execution and evaluation script
+├── tasks.py             # Grader logic with shielded **kwargs
+├── environment.py       # Core grid simulation logic
+├── openenv.yaml         # Strict OpenEnv task configuration
+├── requirements.txt     # Dependencies (fastapi, pydantic, openai, etc.)
+└── Dockerfile           # HF Container config (Port 7860, persistent Uvicorn)
 
----
+# Terminal 1: Start the Grid Server
+uvicorn server.app:app --host 0.0.0.0 --port 7860
 
-## ✅ Phase 2 Compliance
-
-- ✅ **3 Independent Tasks** (Easy, Medium, Hard)
-- ✅ **Deterministic Output** (No randomness in agent)
-- ✅ **Clean Format** ([START], [STEP], [END], [SUMMARY])
-- ✅ **Zero External Dependencies** (No LLM APIs)
-- ✅ **Robust Error Handling** (Graceful degradation)
-- ✅ **Type-Safe** (Pydantic models throughout)
-
----
-
-## 🔧 Technical Details
-
-### Dependencies
-
-- `numpy>=1.24.0` - Numerical computing
-- `pydantic>=2.0.0` - Type validation
-- `pyyaml>=6.0` - Configuration
-- `gymnasium>=0.29.0` - RL environment framework
-
-### Python Version
-
-- Requires Python 3.9+
-
----
-
-## 📊 Performance Metrics
-
-Agent performance varies by difficulty:
-
-- **Easy**: Stable performance (>0.40)
-- **Medium**: Moderate variance (0.40-0.65)
-- **Hard**: High variance due to noise (0.50-0.70)
-
----
-
-## 📝 Notes
-
-- All tasks run sequentially
-- Each task is 24 steps
-- Rewards are normalized by max_steps
-- No warm-up or training phase required
-- Agent strategy is fixed per difficulty
-
----
-
-## 🎯 For Graders
-
-Simply run:
-
-```bash
+# Terminal 2: Run the LLM Agent
+export API_KEY="your_test_key"
 python inference.py
-```
-
-Output will show:
-
-1. Three sequential task executions
-2. Standard [START]/[STEP]/[END] blocks
-3. Final summary of completed tasks
-
-No additional setup, credentials, or configuration needed.
-
----
-
-Last Updated: April 2026
