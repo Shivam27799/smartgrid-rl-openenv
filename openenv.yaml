@@ -4,8 +4,7 @@ type: "environment"
 description: "Real-world microgrid load balancing task"
 maintainer: "shivamverma27799"
 
-environment:
-  entrypoint: "environment:SmartGridEnv"
+task_module: "tasks"
 
 tasks:
   - id: "easy"
