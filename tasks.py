@@ -1,4 +1,4 @@
-__all__ = ["TASKS", "grader_easy", "grader_medium", "grader_hard"]
+__all__ = ["grader_easy", "grader_medium", "grader_hard"]
 
 def run_grader(difficulty: str, trajectory=None, **kwargs):
     import numpy as np
@@ -59,20 +59,20 @@ def create_env_hard():
     return SmartGridEnv(difficulty="hard")
 
 
-TASKS = [
-    {
-        "name": "smartgrid_easy",
-        "env": create_env_easy,
-        "grader": grader_easy
-    },
-    {
-        "name": "smartgrid_medium",
-        "env": create_env_medium,
-        "grader": grader_medium
-    },
-    {
-        "name": "smartgrid_hard",
-        "env": create_env_hard,
-        "grader": grader_hard
-    }
-]
+# TASKS = [
+#     {
+#         "name": "smartgrid_easy",
+#         "env": create_env_easy,
+#         "grader": grader_easy
+#     },
+#     {
+#         "name": "smartgrid_medium",
+#         "env": create_env_medium,
+#         "grader": grader_medium
+#     },
+#     {
+#         "name": "smartgrid_hard",
+#         "env": create_env_hard,
+#         "grader": grader_hard
+#     }
+# ]
