@@ -42,7 +42,7 @@ def run_task(task_name: str):
         env = SmartGridEnv(difficulty=task_name)
         obs = env.reset()
     except Exception as e:
-        print(f"[ERROR] Environment init failed: {e}", file=sys.stderr)
+        print(f"[ERROR] Environment initialization failed: {e}", file=sys.stderr)
         return None
     
     total_reward = 0.0
