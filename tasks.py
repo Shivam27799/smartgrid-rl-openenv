@@ -1,4 +1,4 @@
-# NO IMPORTS AT THE TOP! Keep this completely clean for the naked scanner.
+__all__ = ["TASKS", "grader_easy", "grader_medium", "grader_hard"]
 
 def run_grader(difficulty: str, trajectory=None, **kwargs):
     import numpy as np
