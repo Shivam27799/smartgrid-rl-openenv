@@ -23,11 +23,14 @@ def reset_env(task_id: str = "hard"):
     Now supports task_id to switch difficulty during evaluation.
     """
     global env
-    # Re-initialize the environment with the requested difficulty
+    
+    # 1. Validate the task_id
     if task_id not in ["easy", "medium", "hard"]:
         task_id = "hard"
-    
+        
+    # 2. Re-initialize the environment OUTSIDE the if-statement!
     env = SmartGridEnv(difficulty=task_id)
+    
     return env.reset()
 
 @app.post("/step")
