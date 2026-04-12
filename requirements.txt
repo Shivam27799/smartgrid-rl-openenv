@@ -4,5 +4,3 @@ numpy
 pydantic
 openai
 pyyaml
-openenv
-requests

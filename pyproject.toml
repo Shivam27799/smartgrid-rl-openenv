@@ -15,8 +15,7 @@ dependencies = [
     "numpy",
     "pydantic",
     "openai",
-    "pyyaml",
-    "openenv"
+    "pyyaml"
 ]
 
 [project.scripts]
