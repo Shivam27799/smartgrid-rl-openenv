@@ -1,11 +1,11 @@
-import numpy as np
+# NO IMPORTS AT THE TOP! Keep this completely clean for the naked scanner.
 
 def run_grader(difficulty: str, trajectory=None, **kwargs):
     """
     Runs 5 full episodes and returns the average score.
-    Imports are placed INSIDE the function to prevent static-scan crashes.
+    ALL imports are safely tucked inside so the pre-scanner doesn't crash!
     """
-    # Moved inside to protect the hackathon parser from import errors
+    import numpy as np
     from environment import SmartGridEnv, GridAction
     
     num_episodes = 5
@@ -40,7 +40,6 @@ def run_grader(difficulty: str, trajectory=None, **kwargs):
         
     return round(float(np.mean(episode_scores)), 4)
 
-# Added **kwargs to safely absorb any secret arguments the validator injects
 def grader_easy(trajectory=None, **kwargs):
     return run_grader("easy", trajectory, **kwargs)
 
