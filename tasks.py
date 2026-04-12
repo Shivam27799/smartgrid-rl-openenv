@@ -59,7 +59,7 @@ def create_env_hard():
     return SmartGridEnv(difficulty="hard")
 
 
-tasks = [
+TASKS = [
     {
         "name": "smartgrid_easy",
         "env": create_env_easy,
