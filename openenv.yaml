@@ -1,29 +1,28 @@
-[build-system]
-requires = ["setuptools>=61.0", "wheel"]
-build-backend = "setuptools.build_meta"
+name: "SmartGrid-v1"
+version: "1.0.0"
+type: "environment"
+description: "Real-world microgrid load balancing task"
+maintainer: "shivamverma27799"
 
-[project]
-name = "smartgrid-rl-v1"
-version = "1.0.0"
-description = "Professional OpenEnv energy balancing environment."
-readme = "README.md"
-authors = [{ name = "shivamverma27799" }]
-requires-python = ">=3.9"
-dependencies = [
-    "fastapi",
-    "uvicorn",
-    "numpy",
-    "pydantic",
-    "openai",
-    "pyyaml",
-    "openenv"
-]
-
-[project.scripts]
-# This points exactly to the new function we just made
-server = "server.app:main"
-
-[tool.setuptools]
-# This tells the installer to include the new server folder
-packages = ["server"]
-py-modules = ["environment", "tasks", "inference"]
+tasks:
+  - id: "easy"
+    name: "Easy Task"
+    description: "Basic load balancing task for the easy difficulty setting."
+    difficulty: "easy"
+    grader: "tasks.py:grader_easy"
+    enabled: true
+    
+  - id: "medium"
+    name: "Medium Task"
+    description: "Moderate load balancing task with market price constraints."
+    difficulty: "medium"
+    grader: "tasks.py:grader_medium"
+    enabled: true
+    
+  - id: "hard"
+    name: "Hard Task"
+    description: "Complex load balancing task with high volatility."
+    difficulty: "hard"
+    grader: "tasks.py:grader_hard"
+    enabled: true
+entrypoint: "server.app:main"
