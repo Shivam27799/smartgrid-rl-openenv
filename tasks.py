@@ -1,11 +1,13 @@
 import numpy as np
-from environment import SmartGridEnv, GridAction
 
-def run_grader(difficulty: str, trajectory=None):
+def run_grader(difficulty: str, trajectory=None, **kwargs):
     """
     Runs 5 full episodes and returns the average score.
-    The 'trajectory' argument is required by the OpenEnv interface.
+    Imports are placed INSIDE the function to prevent static-scan crashes.
     """
+    # Moved inside to protect the hackathon parser from import errors
+    from environment import SmartGridEnv, GridAction
+    
     num_episodes = 5
     episode_scores = []
     
@@ -38,12 +40,12 @@ def run_grader(difficulty: str, trajectory=None):
         
     return round(float(np.mean(episode_scores)), 4)
 
-# These wrappers must accept 'trajectory' to match the openenv.yaml call
-def grader_easy(trajectory=None):
-    return run_grader("easy", trajectory)
+# Added **kwargs to safely absorb any secret arguments the validator injects
+def grader_easy(trajectory=None, **kwargs):
+    return run_grader("easy", trajectory, **kwargs)
 
-def grader_medium(trajectory=None):
-    return run_grader("medium", trajectory)
+def grader_medium(trajectory=None, **kwargs):
+    return run_grader("medium", trajectory, **kwargs)
 
-def grader_hard(trajectory=None):
-    return run_grader("hard", trajectory)
+def grader_hard(trajectory=None, **kwargs):
+    return run_grader("hard", trajectory, **kwargs)
