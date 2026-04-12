@@ -1,11 +1,10 @@
 ---
-title: SmartGrid-RL-OpenEnv-v2
+title: SmartGrid AI Manager
 emoji: ⚡
-colorFrom: green
-colorTo: blue
+colorFrom: blue
+colorTo: green
 sdk: docker
 app_port: 7860
-pinned: false
 tags:
   - openenv
   - rl-environment
