@@ -4,12 +4,14 @@ type: "environment"
 description: "Real-world microgrid load balancing task"
 maintainer: "shivamverma27799"
 
+environment:
+  entrypoint: "environment:SmartGridEnv"
+
 tasks:
   - id: "easy"
     name: "Easy Task"
     description: "Basic load balancing task for the easy difficulty setting."
     difficulty: "easy"
-    env: "environment:SmartGridEnv"   
     grader: "tasks:grader_easy"
     enabled: true
     
@@ -17,7 +19,6 @@ tasks:
     name: "Medium Task"
     description: "Moderate load balancing task with market price constraints."
     difficulty: "medium"
-    env: "environment:SmartGridEnv"   
     grader: "tasks:grader_medium"
     enabled: true
     
@@ -25,7 +26,6 @@ tasks:
     name: "Hard Task"
     description: "Complex load balancing task with high volatility."
     difficulty: "hard"
-    env: "environment:SmartGridEnv"   
     grader: "tasks:grader_hard"
     enabled: true
 
