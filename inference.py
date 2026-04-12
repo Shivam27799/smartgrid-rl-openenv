@@ -1,93 +1,93 @@
 import os
-import sys
-from environment import SmartGridEnv, GridAction
+import time
+import requests
+from openai import OpenAI
 
-def clamp_action(value: float) -> float:
-    """Clamp action to valid range [-1.0, 1.0]."""
-    return max(-1.0, min(1.0, value))
+# 1. Environment Variables
+API_BASE_URL = os.getenv("API_BASE_URL", "https://api.openai.com/v1")
+MODEL_NAME = os.getenv("MODEL_NAME", "gpt-3.5-turbo")
+API_KEY = os.getenv("API_KEY", "hf_placeholder")
 
-def smart_agent(obs, task_difficulty: str):
-    """
-    Smart rule-based agent - works without API calls.
-    Adapts strategy based on difficulty level.
-    """
-    load_diff = obs.load - obs.supply
-    
-    if task_difficulty == "easy":
-        action = clamp_action(load_diff * 0.5)
-    elif task_difficulty == "medium":
-        price_impact = (obs.price - 0.5) * 0.4
-        action = clamp_action(load_diff * 0.6 + price_impact)
-    else:
-        price_impact = (obs.price - 0.5) * 0.3
-        supply_margin = abs(obs.load - obs.supply)
-        if supply_margin > 0.5:
-            action = clamp_action(load_diff * 0.8 + price_impact)
-        else:
-            action = clamp_action(load_diff * 0.4 + price_impact * 0.5)
-    
-    return action
+# 2. Initialize the client
+client = OpenAI(api_key=API_KEY, base_url=API_BASE_URL)
+SERVER_URL = "http://0.0.0.0:7860"
+TASK_ID = os.getenv("TASK_ID", "hard")
 
-def run_task(task_name: str):
-    """Run a single task."""
-    max_steps = 24
-    step = 0
+def wait_for_server():
+    for _ in range(30):
+        try:
+            if requests.get(f"{SERVER_URL}/").status_code == 200:
+                return True
+        except requests.ConnectionError:
+            time.sleep(1)
+    raise RuntimeError("FastAPI Server did not start in time.")
+
+def run_inference():
+    wait_for_server()
+    print(f"[START] task={TASK_ID}", flush=True)
     
     try:
-        env = SmartGridEnv(difficulty=task_name)
-        obs = env.reset()
-    except Exception as e:
-        print(f"[ERROR] Environment initialization failed: {e}", file=sys.stderr)
-        return None
-    
-    total_reward = 0.0
-    
-    print(f"[START] task={task_name}", flush=True)
-    
-    for step in range(1, max_steps + 1):
-        try:
-            action_val = smart_agent(obs, task_name)
-            action = GridAction(energy_trade=action_val)
-            obs, reward, done, info = env.step(action)
+        # GET INITIAL STATE
+        reset_resp = requests.post(f"{SERVER_URL}/reset?task_id={TASK_ID}").json()
+        current_obs = reset_resp
+        
+        total_reward = 0.0
+        done = False
+        step = 1
+        
+        while not done and step <= 50:
+            
+            # Extract current grid conditions
+            load = current_obs.get('load', 0.0)
+            supply = current_obs.get('supply', 0.0)
+            price = current_obs.get('price', 0.0)
+            
+            # --- FEED THE ACTUAL DATA TO THE LLM ---
+            prompt_text = (
+                f"Step {step}. Grid Status -> Load: {load:.4f}, Supply: {supply:.4f}, Price: {price:.4f}. "
+                "Calculate the optimal energy_trade value to balance supply and load exactly. "
+                "Reply ONLY with a single float number between -1.0 and 1.0."
+            )
+
+            try:
+                response = client.chat.completions.create(
+                    model=MODEL_NAME,
+                    messages=[
+                        {"role": "system", "content": "You are a highly precise mathematical smart grid controller."},
+                        {"role": "user", "content": prompt_text}
+                    ],
+                    max_tokens=10,
+                    temperature=0.0
+                )
+                
+                llm_output = response.choices[0].message.content.strip()
+                action_val = float(llm_output)
+                    
+            except Exception as e:
+                print(f"LLM API Error: {e}", flush=True)
+                action_val = 0.0
+            
+            # Send action to environment
+            action_payload = {"energy_trade": action_val} 
+            step_resp = requests.post(f"{SERVER_URL}/step", json=action_payload).json()
+            
+            # UPDATE STATE FOR NEXT TURN
+            current_obs = step_resp.get("observation", {})
+            reward = step_resp.get("reward", 0.0)
+            done = step_resp.get("done", False)
             total_reward += reward
             
             print(f"[STEP] step={step} reward={reward:.4f}", flush=True)
+            step += 1
             
-            if done:
-                break
-        except Exception as e:
-            print(f"[ERROR] Step {step} failed: {e}", file=sys.stderr)
-            break
-    
-    final_score = total_reward / max_steps
-    print(f"[END] task={task_name} score={final_score:.4f} steps={step}", flush=True)
-    
-    return final_score
+    except Exception as e:
+        print(f"Script Error: {e}", flush=True)
+        total_reward = 0.0
 
-def run_all_tasks():
-    """Run all 3 tasks."""
-    tasks = ["easy", "medium", "hard"]
-    results = []
+    actual_steps = max(1, step - 1)
+    avg_score = total_reward / actual_steps
     
-    for task_name in tasks:
-        print(f"\n========== RUNNING TASK: {task_name.upper()} ==========", file=sys.stderr)
-        try:
-            score = run_task(task_name)
-            if score is not None:
-                results.append({"task": task_name, "score": score})
-        except Exception as e:
-            print(f"[ERROR] Task {task_name} failed: {e}", file=sys.stderr)
-    
-    print(f"\n[SUMMARY] Completed {len(results)}/3 tasks", flush=True)
-    return results
+    print(f"[END] task={TASK_ID} score={avg_score:.4f} steps={actual_steps}", flush=True)
 
 if __name__ == "__main__":
-    try:
-        run_all_tasks()
-        sys.exit(0)
-    except KeyboardInterrupt:
-        print("\n[INTERRUPTED]", file=sys.stderr)
-        sys.exit(130)
-    except Exception as e:
-        print(f"[FATAL] {e}", file=sys.stderr)
-        sys.exit(1)
+    run_inference()
