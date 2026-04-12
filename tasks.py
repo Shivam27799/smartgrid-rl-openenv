@@ -1,10 +1,5 @@
-# NO IMPORTS AT THE TOP! Keep this completely clean for the naked scanner.
 
 def run_grader(difficulty: str, trajectory=None, **kwargs):
-    """
-    Runs 5 full episodes and returns the average score.
-    ALL imports are safely tucked inside so the pre-scanner doesn't crash!
-    """
     import numpy as np
     from environment import SmartGridEnv, GridAction
     
@@ -18,13 +13,11 @@ def run_grader(difficulty: str, trajectory=None, **kwargs):
         done = False
                 
         while not done:
-            # Handle both object and dict style observations for safety
             load = getattr(obs, 'load', obs.get('load') if isinstance(obs, dict) else 0)
             supply = getattr(obs, 'supply', obs.get('supply') if isinstance(obs, dict) else 0)
             
             deficit = load - supply
             
-            # Heuristic Baseline Agent
             if difficulty == "hard":
                 action_val = deficit * 0.7 
             elif difficulty == "medium":
@@ -40,6 +33,7 @@ def run_grader(difficulty: str, trajectory=None, **kwargs):
         
     return round(float(np.mean(episode_scores)), 4)
 
+
 def grader_easy(trajectory=None, **kwargs):
     return run_grader("easy", trajectory, **kwargs)
 
@@ -48,3 +42,36 @@ def grader_medium(trajectory=None, **kwargs):
 
 def grader_hard(trajectory=None, **kwargs):
     return run_grader("hard", trajectory, **kwargs)
+
+
+# ✅ ADD THIS PART (THIS IS THE FIX)
+def create_env_easy():
+    from environment import SmartGridEnv
+    return SmartGridEnv(difficulty="easy")
+
+def create_env_medium():
+    from environment import SmartGridEnv
+    return SmartGridEnv(difficulty="medium")
+
+def create_env_hard():
+    from environment import SmartGridEnv
+    return SmartGridEnv(difficulty="hard")
+
+
+tasks = [
+    {
+        "name": "smartgrid_easy",
+        "env": create_env_easy,
+        "grader": grader_easy
+    },
+    {
+        "name": "smartgrid_medium",
+        "env": create_env_medium,
+        "grader": grader_medium
+    },
+    {
+        "name": "smartgrid_hard",
+        "env": create_env_hard,
+        "grader": grader_hard
+    }
+]
