@@ -14,18 +14,13 @@ def smart_agent(obs, task_difficulty: str):
     load_diff = obs.load - obs.supply
     
     if task_difficulty == "easy":
-        # Easy: Simple balance strategy
         action = clamp_action(load_diff * 0.5)
     elif task_difficulty == "medium":
-        # Medium: Balance + price awareness
         price_impact = (obs.price - 0.5) * 0.4
         action = clamp_action(load_diff * 0.6 + price_impact)
-    else:  # hard
-        # Hard: Complex multi-factor strategy
+    else:
         price_impact = (obs.price - 0.5) * 0.3
         supply_margin = abs(obs.load - obs.supply)
-        
-        # More aggressive when supply/load mismatch is large
         if supply_margin > 0.5:
             action = clamp_action(load_diff * 0.8 + price_impact)
         else:
@@ -47,20 +42,15 @@ def run_task(task_name: str):
     
     total_reward = 0.0
     
-    # [START] block - MUST be first
     print(f"[START] task={task_name}", flush=True)
     
     for step in range(1, max_steps + 1):
         try:
-            # Use smart agent (NO API calls)
             action_val = smart_agent(obs, task_name)
-            
-            # Step environment
             action = GridAction(energy_trade=action_val)
             obs, reward, done, info = env.step(action)
             total_reward += reward
             
-            # [STEP] block - MUST be printed every step
             print(f"[STEP] step={step} reward={reward:.4f}", flush=True)
             
             if done:
@@ -69,10 +59,7 @@ def run_task(task_name: str):
             print(f"[ERROR] Step {step} failed: {e}", file=sys.stderr)
             break
     
-    # Score normalized over max_steps
     final_score = total_reward / max_steps
-    
-    # [END] block - MUST include score and steps
     print(f"[END] task={task_name} score={final_score:.4f} steps={step}", flush=True)
     
     return final_score
@@ -80,7 +67,6 @@ def run_task(task_name: str):
 def run_all_tasks():
     """Run all 3 tasks."""
     tasks = ["easy", "medium", "hard"]
-    
     results = []
     
     for task_name in tasks:
@@ -88,16 +74,11 @@ def run_all_tasks():
         try:
             score = run_task(task_name)
             if score is not None:
-                results.append({
-                    "task": task_name,
-                    "score": score
-                })
+                results.append({"task": task_name, "score": score})
         except Exception as e:
             print(f"[ERROR] Task {task_name} failed: {e}", file=sys.stderr)
     
-    # Summary
     print(f"\n[SUMMARY] Completed {len(results)}/3 tasks", flush=True)
-    
     return results
 
 if __name__ == "__main__":
