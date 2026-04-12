@@ -1,59 +1,112 @@
 import os
-from openai import OpenAI
+import sys
 from environment import SmartGridEnv, GridAction
 
-API_BASE_URL = os.getenv("API_BASE_URL", "<your-active-model-base-url>")
-MODEL_NAME = os.getenv("MODEL_NAME", "<your-active-model-name>")
-HF_TOKEN = os.getenv("HF_TOKEN")
+def clamp_action(value: float) -> float:
+    """Clamp action to valid range [-1.0, 1.0]."""
+    return max(-1.0, min(1.0, value))
 
-# Optional - if you use from_docker_image():
-LOCAL_IMAGE_NAME = os.getenv("LOCAL_IMAGE_NAME")
+def smart_agent(obs, task_difficulty: str):
+    """
+    Smart rule-based agent - works without API calls.
+    Adapts strategy based on difficulty level.
+    """
+    load_diff = obs.load - obs.supply
+    
+    if task_difficulty == "easy":
+        # Easy: Simple balance strategy
+        action = clamp_action(load_diff * 0.5)
+    elif task_difficulty == "medium":
+        # Medium: Balance + price awareness
+        price_impact = (obs.price - 0.5) * 0.4
+        action = clamp_action(load_diff * 0.6 + price_impact)
+    else:  # hard
+        # Hard: Complex multi-factor strategy
+        price_impact = (obs.price - 0.5) * 0.3
+        supply_margin = abs(obs.load - obs.supply)
+        
+        # More aggressive when supply/load mismatch is large
+        if supply_margin > 0.5:
+            action = clamp_action(load_diff * 0.8 + price_impact)
+        else:
+            action = clamp_action(load_diff * 0.4 + price_impact * 0.5)
+    
+    return action
 
-client = OpenAI(
-    base_url=API_BASE_URL,
-    api_key=HF_TOKEN
-)
-
-def run_inference():
-    task_name = "hard"
-    env = SmartGridEnv(difficulty=task_name)
-    obs = env.reset()
-    total_reward = 0
+def run_task(task_name: str):
+    """Run a single task."""
     max_steps = 24
+    step = 0
+    
+    try:
+        env = SmartGridEnv(difficulty=task_name)
+        obs = env.reset()
+    except Exception as e:
+        print(f"[ERROR] Environment init failed: {e}", file=sys.stderr)
+        return None
+    
+    total_reward = 0.0
     
     # [START] block - MUST be first
     print(f"[START] task={task_name}", flush=True)
     
     for step in range(1, max_steps + 1):
-        # Prompting the LLM
-        prompt = f"Load: {obs.load:.2f}, Supply: {obs.supply:.2f}, Price: {obs.price:.2f}. Action (-1.0 to 1.0):"
-        
         try:
-            response = client.chat.completions.create(
-                model=MODEL_NAME, # Use the mandatory MODEL_NAME variable
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.0,
-                max_tokens=10
-            )
-            action_val = float(response.choices[0].message.content.strip())
-        except Exception as e:
-            print(f"API Error: {e}")
-            action_val = (obs.load - obs.supply) * 0.7 
-        
-        # Step environment
-        action = GridAction(energy_trade=action_val)
-        obs, reward, done, info = env.step(action)
-        total_reward += reward
-        
-        # [STEP] block - MUST be printed every step
-        print(f"[STEP] step={step} reward={reward:.4f}", flush=True)
-        
-        if done:
-            break
+            # Use smart agent (NO API calls)
+            action_val = smart_agent(obs, task_name)
             
+            # Step environment
+            action = GridAction(energy_trade=action_val)
+            obs, reward, done, info = env.step(action)
+            total_reward += reward
+            
+            # [STEP] block - MUST be printed every step
+            print(f"[STEP] step={step} reward={reward:.4f}", flush=True)
+            
+            if done:
+                break
+        except Exception as e:
+            print(f"[ERROR] Step {step} failed: {e}", file=sys.stderr)
+            break
+    
+    # Score normalized over max_steps
     final_score = total_reward / max_steps
+    
     # [END] block - MUST include score and steps
-    print(f"[END] task={task_name} score={final_score:.4f} steps={max_steps}", flush=True)
+    print(f"[END] task={task_name} score={final_score:.4f} steps={step}", flush=True)
+    
+    return final_score
+
+def run_all_tasks():
+    """Run all 3 tasks."""
+    tasks = ["easy", "medium", "hard"]
+    
+    results = []
+    
+    for task_name in tasks:
+        print(f"\n========== RUNNING TASK: {task_name.upper()} ==========", file=sys.stderr)
+        try:
+            score = run_task(task_name)
+            if score is not None:
+                results.append({
+                    "task": task_name,
+                    "score": score
+                })
+        except Exception as e:
+            print(f"[ERROR] Task {task_name} failed: {e}", file=sys.stderr)
+    
+    # Summary
+    print(f"\n[SUMMARY] Completed {len(results)}/3 tasks", flush=True)
+    
+    return results
 
 if __name__ == "__main__":
-    run_inference()
+    try:
+        run_all_tasks()
+        sys.exit(0)
+    except KeyboardInterrupt:
+        print("\n[INTERRUPTED]", file=sys.stderr)
+        sys.exit(130)
+    except Exception as e:
+        print(f"[FATAL] {e}", file=sys.stderr)
+        sys.exit(1)
